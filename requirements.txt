@@ -1,0 +1,206 @@
+High-Level Requirements Document: DW (Menstrual Cycle Tracking App)
+
+1. Introduction
+
+DW is a menstrual cycle tracking web application designed to provide an intuitive and seamless experience for tracking monthly periods. The application will offer calendar-based tracking, cycle predictions, symptom logging, and analytics. This document outlines the high-level requirements for the first MVP, including technical architecture, backend and frontend specifications, authentication, and database schema.
+
+2. System Architecture
+
+The DW application will be a full-stack web application with a decoupled Next.js frontend and Node.js backend. Supabase will serve as the database, while Clerk will handle authentication and user management. The architecture will follow a microservices-inspired approach with API-driven communication between frontend and backend.
+
+2.1 High-Level Architecture Diagram
+
++----------------+          +----------------+         +----------------+
+|   Frontend    | <------> |   API Layer   | <-----> |   Database    |
+|  (Next.js)    |          | (Node.js)      |         | (Supabase)    |
++----------------+          +----------------+         +----------------+
+       |                        |                        |
+       |                        |                        |
+       v                        v                        v
++----------------+     +----------------+      +----------------+
+| Authentication |     |  Notification  |      |  Background    |
+|    (Clerk)    |     |    System      |      |   Processing   |
++----------------+     +----------------+      +----------------+
+
+3. Technical Stack
+
+Frontend: Next.js, Shadcn, TailwindCSS
+
+Backend: Node.js (Express or Fastify)
+
+Database: Supabase (PostgreSQL)
+
+Authentication: Clerk
+
+Notifications: Firebase Cloud Messaging (FCM) or Cron Jobs for reminders
+
+Hosting: Vercel for frontend, Supabase for DB, and Backend on Railway/Fly.io/Heroku
+
+Data Storage: Supabase storage for user data
+
+Deployment: CI/CD via GitHub Actions
+
+4. Functional Requirements
+
+4.1 User Authentication & Profile Management
+
+Users must sign up and log in using Clerk authentication.
+
+Users can update their profile details (e.g., cycle length, period duration, symptoms).
+
+Users can reset their password using Clerk’s password recovery flow.
+
+4.2 Period Tracking & Cycle Predictions
+
+Users can manually log period start and end dates.
+
+System predicts the next cycle based on average cycle length.
+
+Ovulation and fertile window calculations based on cycle data.
+
+Users can adjust past period logs for better accuracy.
+
+4.3 Calendar View
+
+Monthly calendar displaying:
+
+Logged periods (highlighted in red)
+
+Predicted periods (dotted red)
+
+Ovulation and fertile window (different color coding)
+
+Notes or symptoms (icons)
+
+4.4 Symptoms & Mood Logging
+
+Users can log daily symptoms (e.g., cramps, headache, nausea, bloating, fatigue, mood swings).
+
+Users can add custom notes for each day.
+
+Data should be retrievable for analytics.
+
+4.5 Notifications & Reminders
+
+Period start & end reminders via Firebase Cloud Messaging (FCM) or scheduled backend jobs.
+
+Fertility window and ovulation reminders.
+
+Users can enable or disable reminders from the settings.
+
+4.6 Health Insights & Analytics
+
+Display trends on average cycle length, period regularity, and symptom patterns.
+
+Generate insights on cycle irregularities and possible PMS patterns.
+
+Graphical representation of cycle trends over the past months.
+
+5. API Design (Node.js Backend)
+
+All APIs will follow RESTful principles, and requests will be authenticated via JWT (issued by Clerk).
+
+5.1 Authentication APIs
+
+POST /auth/signup – Register a new user (handled via Clerk)
+
+POST /auth/login – Login via Clerk
+
+POST /auth/logout – Logout user
+
+5.2 Period Tracking APIs
+
+POST /periods – Log period start and end dates
+
+GET /periods – Retrieve logged period data
+
+PUT /periods/{id} – Update period log
+
+DELETE /periods/{id} – Remove a period entry
+
+5.3 Symptom Tracking APIs
+
+POST /symptoms – Log symptoms for a specific day
+
+GET /symptoms – Retrieve logged symptoms
+
+5.4 Notifications API
+
+POST /notifications/enable – Enable reminders
+
+POST /notifications/disable – Disable reminders
+
+GET /notifications/status – Check notification status
+
+6. Database Schema (Supabase - PostgreSQL)
+
+6.1 Users Table
+
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  cycle_length INT DEFAULT 28,
+  period_duration INT DEFAULT 5,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+6.2 Periods Table
+
+CREATE TABLE periods (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+6.3 Symptoms Table
+
+CREATE TABLE symptoms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  symptom TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+6.4 Notifications Table
+
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL, -- period_start, ovulation, fertile_window
+  enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+7. Security & Compliance
+
+User Authentication & Security: Clerk will manage authentication, using JWT-based authorization.
+
+Data Privacy: Supabase will encrypt user data at rest, and HTTPS will be enforced.
+
+Rate Limiting & API Security: Implement rate limiting for API requests to prevent abuse.
+
+GDPR Compliance: Users should be able to delete their accounts and data completely.
+
+8. Deployment & CI/CD
+
+Frontend Hosting: Vercel
+
+Backend Hosting: Railway/Fly.io
+
+Database: Supabase
+
+CI/CD: GitHub Actions for automated deployments
+
+9. Future Considerations
+
+Machine Learning: Personalized cycle predictions based on user history.
+
+Integrations: Apple Health & Google Fit support.
+
+Multi-user support: Partner notifications & shared tracking.
+
+Dark mode UI

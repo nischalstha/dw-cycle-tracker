@@ -1,0 +1,148 @@
+Comprehensive Guide to the Menstrual Cycle for DW App AI Education
+Version: 1.0
+Author: Nischal Shrestha
+Date: March 2025
+1. Introduction
+The DW Menstrual Cycle Tracker App aims to not only help users track their cycles but also educate them about menstrual health, bodily changes, hormonal fluctuations, and overall reproductive well-being. This document serves as a foundational resource to power AI-driven insights and personalized recommendations.
+
+Why is This Important?
+Understanding the menstrual cycle helps users:
+
+Track their fertile window for pregnancy planning or contraception.
+Recognize hormonal changes affecting mood, energy, and well-being.
+Identify irregular cycles that could indicate underlying health issues.
+Improve body literacy and confidence in reproductive health.
+2. Overview of the Menstrual Cycle
+What is the Menstrual Cycle?
+The menstrual cycle is a monthly series of changes in a woman's body that prepares for pregnancy. If pregnancy does not occur, the uterus sheds its lining, resulting in menstruation (a period).
+
+Average cycle length: 28 days (but can range between 21-35 days).
+Phases of the cycle:
+
+Menstrual Phase (Days 1-5)
+Follicular Phase (Days 1-13)
+Ovulation Phase (Day 14)
+Luteal Phase (Days 15-28)
+3. Phases of the Menstrual Cycle
+Each phase affects a woman's body, hormones, and mood differently.
+
+🔴 1. Menstrual Phase (Days 1-5)
+What Happens?
+
+The uterus sheds its lining (endometrium), resulting in menstrual bleeding.
+Blood, mucus, and tissues exit the body through the vagina.
+Hormones Involved:
+
+↓ Estrogen & Progesterone → Mood swings, fatigue, and cramps.
+↑ Prostaglandins → Cause uterine contractions, leading to cramps.
+Common Symptoms:
+
+Cramps, bloating, fatigue, mood swings, headaches.
+Low energy, increased need for rest.
+Self-Care Tips:
+
+Stay hydrated, use heat packs for cramps.
+Light exercise (yoga, stretching) can relieve discomfort.
+🟢 2. Follicular Phase (Days 1-13)
+What Happens?
+
+The brain signals the ovaries to prepare an egg for ovulation.
+The uterus starts rebuilding its lining.
+Estrogen rises, leading to increased energy and positivity.
+Hormones Involved:
+
+↑ Estrogen → Improves mood, skin, and energy.
+Follicle-Stimulating Hormone (FSH) → Stimulates egg growth.
+Common Symptoms:
+
+Increased energy, motivation, better focus.
+Improved skin, glowing complexion.
+Higher libido.
+Self-Care Tips:
+
+Best time for intense workouts and productivity.
+Eat protein-rich foods to support egg development.
+🟠 3. Ovulation Phase (Day 14)
+What Happens?
+
+A mature egg is released from the ovary.
+This is the most fertile period (highest chance of pregnancy).
+Cervical mucus becomes thin and stretchy (to help sperm travel).
+Hormones Involved:
+
+↑ Luteinizing Hormone (LH) → Triggers ovulation.
+Peak Estrogen → Boosts libido and attractiveness.
+Common Symptoms:
+
+Sharp pain (mittelschmerz) on one side of the abdomen.
+Higher sex drive, increased confidence.
+Breast tenderness, slight bloating.
+Self-Care Tips:
+
+If trying to conceive, this is the best time for intercourse.
+Stay hydrated, as body temperature increases slightly.
+🟡 4. Luteal Phase (Days 15-28)
+What Happens?
+
+After ovulation, the body prepares for pregnancy.
+If fertilization doesn't happen, hormone levels drop, leading to PMS.
+Hormones Involved:
+
+↑ Progesterone → Increases body temperature, reduces stress.
+↓ Estrogen → Leads to irritability, cravings, and mood swings.
+Common Symptoms (PMS - Premenstrual Syndrome):
+
+Mood swings, irritability, anxiety.
+Food cravings, bloating, breast tenderness.
+Sleep disturbances, acne breakouts.
+Self-Care Tips:
+
+Reduce caffeine and sugar to minimize PMS.
+Practice stress management (meditation, deep breathing).
+Magnesium-rich foods (bananas, spinach) help with mood balance.
+4. Understanding Mood Swings & Emotional Changes
+How Hormones Affect Mood
+Phase	Mood Changes
+Menstrual	Fatigue, irritability, low mood
+Follicular	Optimistic, energetic, motivated
+Ovulation	Confident, social, higher libido
+Luteal	Moody, anxious, sensitive
+AI Tip:
+
+The app should analyze mood logs and predict patterns (e.g., "You tend to feel low 3 days before your period. Try meditation.").
+5. Irregular Cycles & When to Seek Medical Advice
+What is an Irregular Cycle?
+A cycle that is shorter than 21 days or longer than 35 days.
+Missed periods, extremely painful cramps, or unusual bleeding patterns.
+Possible Causes of Irregular Cycles
+Cause	Description
+Stress	Disrupts hormones, delaying ovulation
+PCOS	Irregular or missing periods, hormonal imbalance
+Endometriosis	Severe cramps, heavy bleeding
+Thyroid Disorders	Can make periods too long or short
+When to See a Doctor?
+If periods stop for more than 3 months.
+Extremely heavy bleeding (changing pads/tampons every hour).
+Severe cramps that interfere with daily activities.
+6. Fertility & Contraception
+Understanding the Fertile Window
+Highest chance of pregnancy = Ovulation (Day 14 ± 3 days).
+Sperm can survive up to 5 days, meaning pregnancy is possible even if intercourse occurs before ovulation.
+Types of Contraception
+Method	Effectiveness
+Birth Control Pills	99%
+Condoms	85%
+IUD (Copper or Hormonal)	99%
+Fertility Awareness	75%
+AI Tip:
+
+If users track cycles for contraception, the app should highlight safe vs. high-risk days.
+7. Sources & References
+American College of Obstetricians and Gynecologists (ACOG) - www.acog.org
+World Health Organization (WHO) - www.who.int
+Mayo Clinic - Menstrual Cycle Overview - www.mayoclinic.org
+Flo Health - Period & Cycle Guide - www.flo.health
+National Institute of Child Health & Human Development (NICHD) - www.nichd.nih.gov
+8. Conclusion
+This document provides comprehensive menstrual health knowledge to power AI-driven insights in DW.
+With this knowledge base, DW can provide personalized recommendations, pattern detection, and valuable insights into menstrual and reproductive health.

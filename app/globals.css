@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 347 83% 81%; /* Soft Blush Pink: #F5A9B8 */
+    --primary-foreground: 355 43% 25%;
+
+    --secondary: 101 30% 64%; /* Sage Green: #9DC183 */
+    --secondary-foreground: 120 30% 20%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 270 33% 94%; /* Muted Lavender: #E6E6FA */
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 346 83% 81%;
+
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 347 83% 81%;
+    --primary-foreground: 355 43% 25%;
+
+    --secondary: 101 30% 64%;
+    --secondary-foreground: 120 30% 20%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 346 83% 81%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom styles for our app */
+@layer components {
+  .dw-container {
+    @apply max-w-3xl mx-auto px-4 py-6;
+  }
+  
+  .dw-card {
+    @apply bg-white rounded-2xl shadow-soft p-6 border border-dw-gray/20;
+  }
+  
+  .dw-button-primary {
+    @apply bg-dw-blush text-white hover:bg-dw-blush/90 rounded-full px-6 py-2.5 font-medium transition-colors;
+  }
+  
+  .dw-button-secondary {
+    @apply bg-dw-sage text-white hover:bg-dw-sage/90 rounded-full px-6 py-2.5 font-medium transition-colors;
+  }
+  
+  .dw-button-outline {
+    @apply border border-dw-blush/30 text-dw-text hover:bg-dw-blush/5 rounded-full px-6 py-2.5 font-medium transition-colors;
+  }
+  
+  .dw-input {
+    @apply rounded-xl border border-dw-gray/30 px-4 py-2.5 focus:border-dw-blush focus:ring-1 focus:ring-dw-blush/30 outline-none;
+  }
+  
+  .dw-calendar-day {
+    @apply h-10 w-10 rounded-full flex items-center justify-center text-sm transition-colors;
+  }
+  
+  .dw-calendar-day-period {
+    @apply bg-dw-period/20 text-dw-text border border-dw-period/30;
+  }
+  
+  .dw-calendar-day-ovulation {
+    @apply bg-dw-ovulation/20 text-dw-text border border-dw-ovulation/30;
+  }
+  
+  .dw-calendar-day-fertile {
+    @apply bg-dw-fertile/20 text-dw-text border border-dw-fertile/30;
+  }
+  
+  .dw-calendar-day-today {
+    @apply bg-dw-blush text-white font-medium;
+  }
+  
+  .dw-tab {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-colors;
+  }
+  
+  .dw-tab-active {
+    @apply bg-dw-blush text-white;
+  }
+  
+  .dw-tab-inactive {
+    @apply text-dw-text hover:bg-dw-blush/10;
+  }
+}
+
