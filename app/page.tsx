@@ -585,44 +585,113 @@ export default function HomePage() {
           </div>
 
           {/* Enhanced Phase Timeline */}
-          <div className="relative flex justify-between mb-6 mt-4">
-            {["Menstrual", "Follicular", "Ovulation", "Luteal"].map(
-              (phase, index) => (
-                <div
-                  key={phase}
-                  className="flex flex-col items-center relative group"
-                >
-                  <div className="absolute bottom-full mb-2 w-48 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="bg-white p-2 rounded-lg shadow-lg text-xs text-dw-text/80">
-                      {phase === "Menstrual"
-                        ? "Days 1-5"
-                        : phase === "Follicular"
-                        ? "Days 6-14"
-                        : phase === "Ovulation"
-                        ? "Days 14-16"
-                        : "Days 17-28"}
-                    </div>
-                  </div>
+          <div className="relative py-8">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-dw-blush via-dw-sage to-dw-lavender rounded-full"></div>
+            <div className="relative flex justify-between items-center">
+              {[
+                {
+                  name: "Menstrual",
+                  days: "Days 1-5",
+                  icon: Droplets,
+                  color: "text-dw-blush",
+                  bgColor: "bg-dw-blush",
+                  description: "Period phase - uterine lining sheds"
+                },
+                {
+                  name: "Follicular",
+                  days: "Days 6-14",
+                  icon: Leaf,
+                  color: "text-dw-sage",
+                  bgColor: "bg-dw-sage",
+                  description: "Body prepares for ovulation"
+                },
+                {
+                  name: "Ovulation",
+                  days: "Days 14-16",
+                  icon: Sun,
+                  color: "text-yellow-500",
+                  bgColor: "bg-yellow-500",
+                  description: "Peak fertility window"
+                },
+                {
+                  name: "Luteal",
+                  days: "Days 17-28",
+                  icon: Moon,
+                  color: "text-dw-lavender",
+                  bgColor: "bg-dw-lavender",
+                  description: "Post-ovulation phase"
+                }
+              ].map((phase, index) => {
+                const Icon = phase.icon;
+                const isActive = phaseInfo.phase === phase.name;
+                return (
                   <div
-                    className={`w-3 h-3 rounded-full ${
-                      phaseInfo.phase === phase
-                        ? "ring-2 ring-offset-2 ring-dw-blush scale-125"
-                        : "bg-dw-cream"
-                    } transition-all duration-300`}
-                  ></div>
-                  <span className="text-xs text-dw-text/60 mt-2">{phase}</span>
-                  {index < 3 && (
+                    key={phase.name}
+                    className="flex flex-col items-center relative group"
+                  >
+                    {/* Hover Card */}
+                    <div className="absolute bottom-full mb-4 w-48 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2">
+                      <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon className={`h-4 w-4 ${phase.color}`} />
+                          <span className="font-medium text-sm">
+                            {phase.name}
+                          </span>
+                        </div>
+                        <p className="text-xs text-dw-text/60 mb-1">
+                          {phase.days}
+                        </p>
+                        <p className="text-xs text-dw-text/80">
+                          {phase.description}
+                        </p>
+                      </div>
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-gray-100"></div>
+                    </div>
+
+                    {/* Timeline Node */}
                     <div
-                      className={`absolute top-1.5 left-full w-full h-px ${
-                        phaseInfo.phase === phase
-                          ? "bg-dw-blush"
-                          : "bg-dw-cream/50"
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 
+                        ${
+                          isActive
+                            ? `${phase.bgColor}/20 ring-2 ring-offset-4 ring-${phase.bgColor} scale-110`
+                            : "bg-gray-100"
+                        }`}
+                    >
+                      <Icon
+                        className={`h-6 w-6 ${
+                          isActive ? phase.color : "text-gray-400"
+                        } transition-all duration-500`}
+                      />
+                    </div>
+
+                    {/* Phase Name */}
+                    <span
+                      className={`text-sm mt-2 font-medium transition-all duration-500 ${
+                        isActive ? phase.color : "text-gray-400"
                       }`}
-                    ></div>
-                  )}
-                </div>
-              )
-            )}
+                    >
+                      {phase.name}
+                    </span>
+
+                    {/* Days */}
+                    <span className="text-xs text-dw-text/60 mt-1">
+                      {phase.days}
+                    </span>
+
+                    {/* Connecting Line */}
+                    {index < 3 && (
+                      <div className="absolute top-6 left-[calc(100%_-_8px)] w-[calc(100%_+_16px)] h-[2px]">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isActive ? `${phase.bgColor}/50` : "bg-gray-200"
+                          }`}
+                        ></div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Enhanced Phase Information Grid */}
