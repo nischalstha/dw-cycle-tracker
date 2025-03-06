@@ -20,7 +20,7 @@ export function Logo() {
         ) : (
           <Image
             src="/dw-logo.png"
-            alt="DW Cycle Tracker"
+            alt="DW."
             fill
             priority
             className="object-contain transition-opacity duration-300 group-hover:opacity-90"

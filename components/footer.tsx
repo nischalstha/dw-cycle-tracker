@@ -40,7 +40,7 @@ export function Footer() {
             my girlfriend
           </p>
           <p className="mt-1">
-            © {new Date().getFullYear()} DW Cycle Tracker. All rights reserved.
+            © {new Date().getFullYear()} DW. All rights reserved.
           </p>
         </div>
       </div>
