@@ -28,7 +28,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Baby,
-  Loader2
+  Loader2,
+  Bell
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useToast } from "@/components/ui/use-toast";
@@ -416,24 +417,121 @@ export default function HomePage() {
   // If there's no data yet, show a welcome message
   if (!activePeriod && !nextPeriodDate) {
     return (
-      <div className="dw-container">
-        <Card className="p-6 mb-6">
-          <h2 className="text-xl font-medium mb-2">
-            Welcome to Your Cycle Tracker
-          </h2>
-          <p className="text-dw-text/60 mb-4">
-            It looks like you haven't logged any periods yet. Start tracking to
-            get personalized insights.
-          </p>
-          <Button
-            className="bg-dw-blush hover:bg-dw-blush/90 text-white"
-            asChild
-          >
-            <Link href="/tracking">
-              <Plus className="h-4 w-4 mr-2" />
-              Log Your First Period
-            </Link>
-          </Button>
+      <div className="dw-container px-4 sm:px-6 max-w-7xl mx-auto">
+        <Card className="p-6 sm:p-8 mb-6">
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="bg-dw-blush/10 p-4 rounded-full mb-4">
+              <Flower className="h-12 w-12 text-dw-blush" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-medium mb-3">
+              Welcome to Your Cycle Tracker
+            </h2>
+            <p className="text-dw-text/60 max-w-2xl mb-6">
+              Start your journey to better understanding your menstrual cycle.
+              Track your periods, monitor symptoms, and get personalized
+              insights to make informed decisions about your health.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {[
+              {
+                icon: Calendar,
+                title: "Track Your Cycle",
+                description:
+                  "Log your periods and symptoms to get accurate predictions for future cycles."
+              },
+              {
+                icon: LineChart,
+                title: "Get Insights",
+                description:
+                  "Understand your patterns and receive personalized health recommendations."
+              },
+              {
+                icon: Bell,
+                title: "Stay Informed",
+                description:
+                  "Receive reminders for upcoming periods and fertile windows."
+              }
+            ].map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={index}
+                  className="flex flex-col items-center text-center p-4 bg-dw-cream/10 rounded-xl"
+                >
+                  <div className="bg-white p-3 rounded-full mb-3">
+                    <Icon className="h-6 w-6 text-dw-blush" />
+                  </div>
+                  <h3 className="font-medium mb-2">{feature.title}</h3>
+                  <p className="text-sm text-dw-text/60">
+                    {feature.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bg-dw-cream/20 p-6 rounded-xl mb-8">
+            <h3 className="font-medium mb-4 text-center">
+              What you can track:
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                {
+                  icon: Droplets,
+                  label: "Period Flow",
+                  color: "text-dw-blush"
+                },
+                {
+                  icon: ThermometerSun,
+                  label: "Symptoms",
+                  color: "text-dw-sage"
+                },
+                { icon: Heart, label: "Mood", color: "text-rose-500" },
+                {
+                  icon: MessageCircle,
+                  label: "Notes",
+                  color: "text-dw-lavender"
+                }
+              ].map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 justify-center"
+                  >
+                    <Icon className={`h-5 w-5 ${item.color}`} />
+                    <span className="text-sm">{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button
+              className="bg-dw-blush hover:bg-dw-blush/90 text-white w-full sm:w-auto"
+              size="lg"
+              asChild
+            >
+              <Link href="/tracking">
+                <Plus className="h-4 w-4 mr-2" />
+                Log Your First Period
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              size="lg"
+              asChild
+            >
+              <Link href="/insights">
+                <LineChart className="h-4 w-4 mr-2" />
+                Learn More
+              </Link>
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -762,7 +860,7 @@ export default function HomePage() {
                   Expected{" "}
                   {formatDate(
                     new Date(
-                      currentDate.getTime() +
+                      (currentDate?.getTime() ?? Date.now()) +
                         daysUntilOvulation * 24 * 60 * 60 * 1000
                     )
                   )}

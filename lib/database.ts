@@ -471,11 +471,48 @@ export async function calculateCycleStats(userId: string): Promise<{
     // Not enough data to calculate cycle length
     // Return default values or user settings
     const settings = await getUserSettings(userId);
+    console.log("Settings:", settings);
+
+    // Get the last period even if we don't have enough historical data
+    const lastPeriod = periods?.[0];
+    let predictedNextPeriod = null;
+    let predictedOvulation = null;
+
+    // If we have at least one period, calculate predictions using default cycle length
+    if (lastPeriod) {
+      const cycleLength = settings?.cycle_length || 28;
+      const lastPeriodStart = new Date(lastPeriod.start_date);
+      const today = new Date();
+
+      // Calculate how many cycles have passed
+      const daysSinceLastPeriod = Math.round(
+        (today.getTime() - lastPeriodStart.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const cyclesPassed = Math.floor(daysSinceLastPeriod / cycleLength);
+
+      // Calculate next period date
+      predictedNextPeriod = new Date(lastPeriodStart);
+      predictedNextPeriod.setDate(
+        lastPeriodStart.getDate() + (cyclesPassed + 1) * cycleLength
+      );
+
+      // Ensure the predicted date is in the future
+      if (predictedNextPeriod <= today) {
+        predictedNextPeriod.setDate(
+          predictedNextPeriod.getDate() + cycleLength
+        );
+      }
+
+      // Calculate ovulation (14 days before next period)
+      predictedOvulation = new Date(predictedNextPeriod);
+      predictedOvulation.setDate(predictedOvulation.getDate() - 14);
+    }
+
     return {
       averageCycleLength: settings?.cycle_length || 28,
       averagePeriodLength: settings?.period_length || 5,
-      predictedNextPeriod: null,
-      predictedOvulation: null
+      predictedNextPeriod,
+      predictedOvulation
     };
   }
 
@@ -484,11 +521,11 @@ export async function calculateCycleStats(userId: string): Promise<{
   let cycleCount = 0;
 
   for (let i = 0; i < periods.length - 1; i++) {
-    const currentPeriodStart = new Date(periods[i].start_date);
-    const nextPeriodStart = new Date(periods[i + 1].start_date);
+    const currentPeriodStart = new Date(periods[i + 1].start_date);
+    const nextPeriodStart = new Date(periods[i].start_date);
 
     const cycleDays = Math.round(
-      (currentPeriodStart.getTime() - nextPeriodStart.getTime()) /
+      (nextPeriodStart.getTime() - currentPeriodStart.getTime()) /
         (1000 * 60 * 60 * 24)
     );
 
@@ -533,14 +570,32 @@ export async function calculateCycleStats(userId: string): Promise<{
 
   if (lastPeriod) {
     const lastPeriodStart = new Date(lastPeriod.start_date);
+    const today = new Date();
 
-    // Predict next period
+    // Calculate how many cycles have passed and predict next period
+    const daysSinceLastPeriod = Math.round(
+      (today.getTime() - lastPeriodStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const cyclesPassed = Math.floor(daysSinceLastPeriod / averageCycleLength);
+
+    // Calculate the next period date
     predictedNextPeriod = new Date(lastPeriodStart);
-    predictedNextPeriod.setDate(lastPeriodStart.getDate() + averageCycleLength);
+    predictedNextPeriod.setDate(
+      lastPeriodStart.getDate() + (cyclesPassed + 1) * averageCycleLength
+    );
+
+    // Double check if predicted date is in the future, if not add another cycle
+    if (predictedNextPeriod <= today) {
+      predictedNextPeriod.setDate(
+        predictedNextPeriod.getDate() + averageCycleLength
+      );
+    }
 
     // Predict ovulation (typically 14 days before next period)
-    predictedOvulation = new Date(predictedNextPeriod);
-    predictedOvulation.setDate(predictedNextPeriod.getDate() - 14);
+    if (predictedNextPeriod) {
+      predictedOvulation = new Date(predictedNextPeriod);
+      predictedOvulation.setDate(predictedOvulation.getDate() - 14);
+    }
   }
 
   // Update user settings with calculated values

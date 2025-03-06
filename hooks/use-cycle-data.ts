@@ -41,17 +41,25 @@ export function useCycleData() {
   // Load user data
   useEffect(() => {
     async function loadUserData() {
-      if (!isUserLoaded || !user) return;
+      if (!isUserLoaded || !user || !user.id) {
+        console.log("User not loaded or not available", {
+          isUserLoaded,
+          hasUser: !!user,
+          hasUserId: !!user?.id
+        });
+        return;
+      }
 
-      console.log("Loading user data...", user.id);
+      const userId = user.id;
+      console.log("Loading user data...", userId);
       setIsLoading(true);
       setError(null);
 
       try {
         // Get all period stats in one call
         console.log("Fetching period stats...");
-        const stats = await getPeriodStats(user.id);
-        console.log("Period stats received:", stats);
+        const stats = await getPeriodStats(userId);
+        console.log("Full period stats:", JSON.stringify(stats, null, 2));
 
         // Update state with all the data
         setPeriods(stats.periods);
@@ -65,16 +73,24 @@ export function useCycleData() {
           end: stats.predictions.fertile.end
         });
 
+        console.log("Updated state with stats:", {
+          dayOfCycle: stats.currentCycle.dayOfCycle,
+          cycleLength: stats.averages.cycleLength,
+          periodLength: stats.averages.periodLength,
+          nextPeriodDate: stats.predictions.nextPeriod,
+          ovulationDate: stats.predictions.ovulation
+        });
+
         // Get active period
         console.log("Fetching active period...");
-        const activePeriodData = await getActivePeriod(user.id);
-        console.log("Active period received:", activePeriodData);
+        const activePeriodData = await getActivePeriod(userId);
+        console.log("Active period data:", activePeriodData);
         setActivePeriod(activePeriodData);
 
         // Get last period
         console.log("Fetching last period...");
-        const lastPeriodData = await getLastPeriod(user.id);
-        console.log("Last period received:", lastPeriodData);
+        const lastPeriodData = await getLastPeriod(userId);
+        console.log("Last period data:", lastPeriodData);
         setLastPeriod(lastPeriodData);
 
         console.log("All data loaded successfully");
@@ -82,17 +98,7 @@ export function useCycleData() {
         console.error("Error loading user data:", err);
         setError("Failed to load your cycle data. Please try again.");
       } finally {
-        // Even if there's an error, we should stop loading
         setIsLoading(false);
-
-        // If we've been loading for more than 5 seconds, stop loading anyway
-        // This is a fallback in case something goes wrong
-        setTimeout(() => {
-          if (isLoading) {
-            console.log("Forcing loading state to false after timeout");
-            setIsLoading(false);
-          }
-        }, 5000);
       }
     }
 
