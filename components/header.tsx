@@ -10,42 +10,27 @@ import {
 } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [time, setTime] = useState<string>("");
+  const [date, setDate] = useState<string>("");
   const pathname = usePathname();
 
-  // Update time every minute
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
+    // Update time immediately and then every minute
+    const updateDateTime = () => {
+      const now = new Date();
+      setTime(format(now, "h:mm a"));
+      setDate(format(now, "EEEE, MMMM d"));
+    };
+
+    updateDateTime(); // Initial update
+    const timer = setInterval(updateDateTime, 60000);
+
     return () => clearInterval(timer);
   }, []);
-
-  const dateTimeFormats = {
-    fullDate: currentTime.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric"
-    }),
-    shortDate: currentTime.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric"
-    }),
-    time: currentTime.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
-    }),
-    weekday: currentTime.toLocaleDateString("en-US", { weekday: "long" }),
-    dayMonth: currentTime.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric"
-    })
-  };
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
@@ -65,17 +50,17 @@ export function Header() {
                 <Logo />
               </div>
               {/* Desktop Time Display */}
-              <div className="hidden items-center gap-3 rounded-full bg-gradient-to-r from-dw-cream/30 to-dw-cream/20 px-4 py-2 sm:flex">
-                <Clock className="h-4 w-4 text-dw-blush" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-dw-text/90">
-                    {dateTimeFormats.time}
-                  </span>
-                  <span className="text-xs text-dw-text/70">
-                    {dateTimeFormats.weekday}, {dateTimeFormats.dayMonth}
-                  </span>
+              {time && (
+                <div className="hidden items-center gap-3 rounded-full bg-gradient-to-r from-dw-cream/30 to-dw-cream/20 px-4 py-2 sm:flex">
+                  <Clock className="h-4 w-4 text-dw-blush" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-dw-text/90">
+                      {time}
+                    </span>
+                    <span className="text-xs text-dw-text/70">{date}</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Section: Navigation and Auth */}
@@ -115,7 +100,7 @@ export function Header() {
                   )}
                 </button>
 
-                {/* User Button - Both Mobile and Desktop */}
+                {/* User Button */}
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
@@ -161,20 +146,19 @@ export function Header() {
       {isMenuOpen && (
         <div className="fixed inset-x-0 top-[57px] z-10 bg-white shadow-lg sm:hidden">
           {/* Date and Time Section */}
-          <div className="border-b border-dw-gray/5 bg-gradient-to-r from-dw-cream/20 to-transparent px-4 py-3">
-            <div className="flex items-center gap-3 text-dw-text/90">
-              <Clock className="h-5 w-5 text-dw-blush" />
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold text-dw-text">
-                  {dateTimeFormats.time}
-                </span>
-                <span className="text-sm">
-                  {dateTimeFormats.weekday}, {dateTimeFormats.dayMonth},{" "}
-                  {currentTime.getFullYear()}
-                </span>
+          {time && (
+            <div className="border-b border-dw-gray/5 bg-gradient-to-r from-dw-cream/20 to-transparent px-4 py-3">
+              <div className="flex items-center gap-3 text-dw-text/90">
+                <Clock className="h-5 w-5 text-dw-blush" />
+                <div className="flex flex-col">
+                  <span className="text-lg font-semibold text-dw-text">
+                    {time}
+                  </span>
+                  <span className="text-sm">{date}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Navigation Links */}
           <nav className="divide-y divide-dw-gray/5">

@@ -27,11 +27,24 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
-  Baby
+  Baby,
+  Loader2
 } from "lucide-react";
-import { defaultCycleData, calculateDayOfCycle } from "@/lib/cycle-data";
 import { useUser } from "@clerk/nextjs";
 import { useToast } from "@/components/ui/use-toast";
+import { useCycleData } from "@/hooks/use-cycle-data";
+
+// Add this at the top of the file after imports
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+  return <>{children}</>;
+};
 
 // Add cycle phase calculation helper
 const getCyclePhase = (dayOfCycle: number, cycleLength: number) => {
@@ -339,19 +352,29 @@ export default function HomePage() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
-  const [cycleData, setCycleData] = useState<typeof defaultCycleData | null>(
-    null
-  );
   const [isMobileView, setIsMobileView] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
   // Hooks
   const { toast } = useToast();
   const { user, isLoaded: isUserLoaded } = useUser();
+  const {
+    isLoading,
+    error,
+    cycleLength,
+    periodLength,
+    dayOfCycle,
+    activePeriod,
+    nextPeriodDate,
+    ovulationDate,
+    fertileWindow,
+    currentPhase
+  } = useCycleData();
 
-  // Initialize cycle data and handle window-specific code
+  // Handle window-specific code
   useEffect(() => {
-    setCycleData(defaultCycleData);
     setMounted(true);
+    setCurrentDate(new Date());
 
     const checkMobile = () => {
       setIsMobileView(window.innerWidth < 640);
@@ -362,101 +385,119 @@ export default function HomePage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Simulate progress bar animation - moved above conditional return
-  useEffect(() => {
-    if (!mounted || !cycleData) return;
-
-    const timer = setInterval(() => {
-      setCycleData(prev => {
-        if (!prev) return prev;
-
-        const newDayOfCycle =
-          prev.dayOfCycle < prev.cycleLength ? prev.dayOfCycle + 1 : 1;
-
-        // If cycle resets, update last period and next period
-        if (newDayOfCycle === 1) {
-          const lastPeriodStart = prev.nextPeriod;
-          const lastPeriodEnd = new Date(lastPeriodStart);
-          lastPeriodEnd.setDate(
-            lastPeriodEnd.getDate() + prev.periodLength - 1
-          );
-
-          const nextPeriodDate = new Date(lastPeriodStart);
-          nextPeriodDate.setDate(nextPeriodDate.getDate() + prev.cycleLength);
-
-          return {
-            ...prev,
-            dayOfCycle: newDayOfCycle,
-            lastPeriod: {
-              start: lastPeriodStart,
-              end: lastPeriodEnd
-            },
-            nextPeriod: nextPeriodDate
-          };
-        }
-
-        return {
-          ...prev,
-          dayOfCycle: newDayOfCycle
-        };
-      });
-    }, 86400000); // Restored to update every 24 hours
-
-    return () => clearInterval(timer);
-  }, [mounted, cycleData]);
-
-  // Early return for non-mounted state to prevent hydration issues
-  if (!mounted || !cycleData) {
+  // If not mounted or loading, show loading state
+  if (!mounted || isLoading) {
     return (
-      <div className="dw-container px-4 sm:px-6 max-w-7xl mx-auto">
-        <div className="animate-pulse">
-          <div className="h-8 w-48 bg-gray-200 rounded mb-4"></div>
-          <div className="h-4 w-32 bg-gray-200 rounded"></div>
-        </div>
+      <div className="dw-container flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-dw-blush" />
+        <p className="ml-2">Loading your cycle data...</p>
       </div>
     );
   }
 
-  // Get today's date - moved inside the mounted check
-  const today = new Date();
+  // If there's an error, show error state
+  if (error) {
+    return (
+      <div className="dw-container">
+        <Card className="p-6 mb-6">
+          <h2 className="text-xl font-medium mb-2">Error Loading Data</h2>
+          <p className="text-dw-text/60 mb-4">{error}</p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-dw-blush hover:bg-dw-blush/90 text-white"
+          >
+            Try Again
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // If there's no data yet, show a welcome message
+  if (!activePeriod && !nextPeriodDate) {
+    return (
+      <div className="dw-container">
+        <Card className="p-6 mb-6">
+          <h2 className="text-xl font-medium mb-2">
+            Welcome to Your Cycle Tracker
+          </h2>
+          <p className="text-dw-text/60 mb-4">
+            It looks like you haven't logged any periods yet. Start tracking to
+            get personalized insights.
+          </p>
+          <Button
+            className="bg-dw-blush hover:bg-dw-blush/90 text-white"
+            asChild
+          >
+            <Link href="/tracking">
+              <Plus className="h-4 w-4 mr-2" />
+              Log Your First Period
+            </Link>
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // Get cycle phase information
+  const phaseInfo = getCyclePhase(dayOfCycle, cycleLength);
+  const PhaseIcon = phaseInfo.icon;
+
+  // Calculate cycle progress
+  const cycleProgress = Math.round((dayOfCycle / cycleLength) * 100);
+
+  // Get calendar days
+  const calendarDays = currentDate
+    ? getCalendarDays(currentDate, 9, {
+        lastPeriod: {
+          start: activePeriod ? new Date(activePeriod.start_date) : new Date(),
+          end:
+            activePeriod && activePeriod.end_date
+              ? new Date(activePeriod.end_date)
+              : new Date()
+        },
+        nextPeriod: nextPeriodDate || new Date(),
+        cycleLength,
+        periodLength
+      })
+    : [];
+
+  // Get fertility status
+  const fertilityStatus = getFertilityStatus(dayOfCycle);
+
+  // Calculate days until ovulation (from current cycle day to day 14)
+  const daysUntilOvulation =
+    dayOfCycle <= 14 ? 14 - dayOfCycle : cycleLength - dayOfCycle + 14;
 
   // Calculate days until next period
-  const daysUntilNextPeriod = Math.max(
-    0,
-    Math.ceil(
-      (cycleData.nextPeriod.getTime() - today.getTime()) / (1000 * 3600 * 24)
-    )
-  );
-
-  // Calculate percentage of cycle completed
-  const cyclePercentage = Math.min(
-    100,
-    Math.round((cycleData.dayOfCycle / cycleData.cycleLength) * 100)
-  );
+  const daysUntilNextPeriod =
+    nextPeriodDate && currentDate
+      ? Math.max(
+          0,
+          Math.ceil(
+            (nextPeriodDate.getTime() - currentDate.getTime()) /
+              (1000 * 3600 * 24)
+          )
+        )
+      : "--";
 
   // Format date to display month and day
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | null) => {
+    if (!mounted || !date) return "";
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric"
     });
   };
 
-  // Get current cycle phase info
-  const phaseInfo = getCyclePhase(cycleData.dayOfCycle, cycleData.cycleLength);
-  const PhaseIcon = phaseInfo.icon;
-
-  // Get calendar days with cycle information
-  const calendarDays = getCalendarDays(today, 10, cycleData);
-
-  // Get fertility status
-  const fertilityStatus = getFertilityStatus(cycleData.dayOfCycle);
-
-  // Calculate days until ovulation (from current cycle day to day 14)
-  const daysUntilOvulation =
-    cycleData.dayOfCycle <= 14
-      ? 14 - cycleData.dayOfCycle
-      : cycleData.cycleLength - cycleData.dayOfCycle + 14;
+  // Format time to display hour and minute
+  const formatTime = (date: Date | null) => {
+    if (!mounted || !date) return "";
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "numeric"
+    });
+  };
 
   // Update mood selection handler
   const handleMoodSelection = (mood: string) => {
@@ -560,16 +601,16 @@ export default function HomePage() {
             <div>
               <p className="text-xs sm:text-sm text-dw-text/60">Started</p>
               <p className="text-base sm:text-lg font-medium text-dw-text">
-                {formatDate(cycleData.lastPeriod.start)}
+                {formatDate(
+                  activePeriod ? new Date(activePeriod.start_date) : new Date()
+                )}
               </p>
-              <p className="text-xs text-dw-text/60">
-                {cycleData.periodLength} days
-              </p>
+              <p className="text-xs text-dw-text/60">{periodLength} days</p>
             </div>
             <div className="text-right">
               <p className="text-xs sm:text-sm text-dw-text/60">Days Since</p>
               <p className="text-xl sm:text-2xl font-medium text-dw-text">
-                {cycleData.dayOfCycle}
+                {dayOfCycle}
               </p>
               <p className="text-xs text-dw-text/60">days ago</p>
             </div>
@@ -582,11 +623,9 @@ export default function HomePage() {
             <div>
               <p className="text-xs sm:text-sm text-dw-text/60">Expected</p>
               <p className="text-base sm:text-lg font-medium text-dw-text">
-                {formatDate(cycleData.nextPeriod)}
+                {formatDate(nextPeriodDate || new Date())}
               </p>
-              <p className="text-xs text-dw-text/60">
-                ~{cycleData.periodLength} days
-              </p>
+              <p className="text-xs text-dw-text/60">~{periodLength} days</p>
             </div>
             <div className="text-right">
               <p className="text-xs sm:text-sm text-dw-text/60">Days Until</p>
@@ -701,11 +740,9 @@ export default function HomePage() {
               <div>
                 <p className="text-xs sm:text-sm text-dw-text/60">Cycle Day</p>
                 <p className="text-xl sm:text-2xl font-medium text-dw-text">
-                  {cycleData.dayOfCycle}
+                  {dayOfCycle}
                 </p>
-                <p className="text-xs text-dw-text/60">
-                  of {cycleData.cycleLength} days
-                </p>
+                <p className="text-xs text-dw-text/60">of {cycleLength} days</p>
               </div>
               <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-dw-blush" />
             </div>
@@ -725,7 +762,8 @@ export default function HomePage() {
                   Expected{" "}
                   {formatDate(
                     new Date(
-                      today.getTime() + daysUntilOvulation * 24 * 60 * 60 * 1000
+                      currentDate.getTime() +
+                        daysUntilOvulation * 24 * 60 * 60 * 1000
                     )
                   )}
                 </p>
@@ -780,24 +818,7 @@ export default function HomePage() {
                     <div
                       className={`h-full ${phaseInfo.bgColor} transition-all duration-300`}
                       style={{
-                        width: `${
-                          ((cycleData.dayOfCycle %
-                            (phaseInfo.phase === "Menstrual"
-                              ? 5
-                              : phaseInfo.phase === "Follicular"
-                              ? 9
-                              : phaseInfo.phase === "Ovulation"
-                              ? 3
-                              : 12)) /
-                            (phaseInfo.phase === "Menstrual"
-                              ? 5
-                              : phaseInfo.phase === "Follicular"
-                              ? 9
-                              : phaseInfo.phase === "Ovulation"
-                              ? 3
-                              : 12)) *
-                          100
-                        }%`
+                        width: `${cycleProgress}%`
                       }}
                     />
                   </div>
@@ -824,7 +845,7 @@ export default function HomePage() {
               <div className="h-1 bg-dw-cream/30 rounded-full overflow-hidden">
                 <div
                   className="relative h-full bg-gradient-to-r from-dw-blush via-dw-sage to-dw-lavender transition-all duration-700 ease-in-out"
-                  style={{ width: `${cyclePercentage}%` }}
+                  style={{ width: `${cycleProgress}%` }}
                 >
                   <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-md"></div>
                 </div>

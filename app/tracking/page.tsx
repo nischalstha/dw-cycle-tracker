@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -26,13 +27,25 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import Link from "next/link";
+import { useCycleData } from "@/hooks/use-cycle-data";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function TrackingPage() {
-  const [date, setDate] = useState<Date>(new Date());
-  const [flow, setFlow] = useState<string | null>(null);
-  const [mood, setMood] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { isLoading, error, activePeriod, logPeriodStart, logPeriodEnd } =
+    useCycleData();
+
+  const [date, setDate] = useState<Date | null>(null);
+  useEffect(() => {
+    setDate(new Date());
+  }, []);
+
+  const [flow, setFlow] = useState<"light" | "medium" | "heavy" | null>(null);
+  const [mood, setMood] = useState<"happy" | "neutral" | "sad" | null>(null);
   const [painLevel, setPainLevel] = useState<number[]>([0]);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const symptoms = [
     { id: "headache", label: "Headache" },
@@ -45,7 +58,8 @@ export default function TrackingPage() {
     { id: "nausea", label: "Nausea" }
   ];
 
-  const formatDate = (date: Date) => {
+  const formatDisplayDate = (date: Date | null) => {
+    if (!date) return "";
     return date.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
@@ -54,18 +68,21 @@ export default function TrackingPage() {
   };
 
   const goToPreviousDay = () => {
+    if (!date) return;
     const prevDay = new Date(date);
     prevDay.setDate(prevDay.getDate() - 1);
     setDate(prevDay);
   };
 
   const goToNextDay = () => {
+    if (!date) return;
     const nextDay = new Date(date);
     nextDay.setDate(nextDay.getDate() + 1);
     setDate(nextDay);
   };
 
-  const isToday = (date: Date) => {
+  const isToday = (date: Date | null) => {
+    if (!date) return false;
     const today = new Date();
     return (
       date.getDate() === today.getDate() &&
@@ -82,16 +99,97 @@ export default function TrackingPage() {
     );
   };
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log({
-      date,
+  const handleSave = async () => {
+    if (!date) return;
+    console.log("handleSave called with:", {
       flow,
       mood,
       painLevel: painLevel[0],
-      symptoms: selectedSymptoms
+      selectedSymptoms,
+      notes,
+      date: date.toISOString()
     });
+
+    if (!flow && !activePeriod) {
+      console.log("No flow selected, showing error toast");
+      toast({
+        title: "Please select a flow level",
+        description: "Flow level is required to start a period",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (activePeriod) {
+        // End period
+        console.log("Ending period...");
+        await logPeriodEnd(date, {
+          pain_level: painLevel[0],
+          mood: mood || undefined,
+          symptoms: selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
+          notes: notes.trim() !== "" ? notes : undefined
+        });
+
+        toast({
+          title: "Period ended",
+          description: "Your period has been successfully ended"
+        });
+      } else {
+        // Start period
+        if (!flow) return; // This should never happen due to the check above
+
+        console.log("Starting period with data:", {
+          flow,
+          pain_level: painLevel[0],
+          mood: mood || undefined,
+          symptoms: selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
+          notes: notes.trim() !== "" ? notes : undefined
+        });
+
+        const result = await logPeriodStart(date, {
+          flow,
+          pain_level: painLevel[0],
+          mood: mood || undefined,
+          symptoms: selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
+          notes: notes.trim() !== "" ? notes : undefined
+        });
+
+        console.log("Period start result:", result);
+
+        toast({
+          title: "Period started",
+          description: "Your period has been successfully logged"
+        });
+      }
+
+      // Reset form
+      setFlow(null);
+      setMood(null);
+      setPainLevel([0]);
+      setSelectedSymptoms([]);
+      setNotes("");
+    } catch (err) {
+      console.error("Error saving period data:", err);
+      toast({
+        title: "Error",
+        description: "There was an error saving your data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading || !date) {
+    return (
+      <div className="dw-container max-w-2xl mx-auto flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-dw-blush" />
+        <p className="ml-2">Loading your cycle data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dw-container max-w-2xl mx-auto">
@@ -109,11 +207,12 @@ export default function TrackingPage() {
 
       <div className="mb-6">
         <h1 className="text-2xl font-medium text-dw-text mb-2">
-          Track Your Cycle
+          {activePeriod ? "End Your Period" : "Start Your Period"}
         </h1>
         <p className="text-dw-text/60">
-          Log your period, mood, and symptoms to help us understand your cycle
-          better.
+          {activePeriod
+            ? "Log the end of your current period with any symptoms or notes"
+            : "Log your period, mood, and symptoms to help us understand your cycle better"}
         </p>
       </div>
 
@@ -139,7 +238,7 @@ export default function TrackingPage() {
                 variant="outline"
                 className="rounded-full border-dw-gray/30 hover:bg-dw-blush/5 min-w-[180px] justify-center"
               >
-                {isToday(date) ? "Today" : formatDate(date)}
+                {isToday(date) ? "Today" : formatDisplayDate(date)}
                 <CalendarIcon className="h-4 w-4 ml-2" />
               </Button>
             </PopoverTrigger>
@@ -167,34 +266,42 @@ export default function TrackingPage() {
 
       <Card className="mb-6 p-6">
         <div className="space-y-6">
-          {/* Period Flow */}
-          <div>
-            <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Droplets className="h-4 w-4 text-dw-blush" />
-              Period Flow
-            </h3>
-            <p className="text-dw-text/60 text-sm mb-3">
-              How heavy is your flow today?
-            </p>
-            <div className="flex gap-2">
-              {["None", "Light", "Medium", "Heavy"].map(level => (
-                <Button
-                  key={level}
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "flex-1 rounded-xl",
-                    flow === level
-                      ? "bg-dw-blush/10 border-dw-blush text-dw-text"
-                      : ""
-                  )}
-                  onClick={() => setFlow(level)}
-                >
-                  {level}
-                </Button>
-              ))}
+          {/* Period Flow - Only show when starting a period */}
+          {!activePeriod && (
+            <div>
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Droplets className="h-4 w-4 text-dw-blush" />
+                Period Flow
+              </h3>
+              <p className="text-dw-text/60 text-sm mb-3">
+                How heavy is your flow today?
+              </p>
+              <div className="flex gap-2">
+                {[
+                  { id: "light", label: "Light" },
+                  { id: "medium", label: "Medium" },
+                  { id: "heavy", label: "Heavy" }
+                ].map(level => (
+                  <Button
+                    key={level.id}
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "flex-1 rounded-xl",
+                      flow === level.id
+                        ? "bg-dw-blush/10 border-dw-blush text-dw-text"
+                        : ""
+                    )}
+                    onClick={() =>
+                      setFlow(level.id as "light" | "medium" | "heavy")
+                    }
+                  >
+                    {level.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Mood */}
           <div>
@@ -305,13 +412,37 @@ export default function TrackingPage() {
             </div>
           </div>
 
+          {/* Notes */}
+          <div>
+            <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+              Notes
+            </h3>
+            <textarea
+              className="w-full p-3 border border-dw-gray/30 rounded-xl text-sm"
+              rows={3}
+              placeholder="Add any additional notes here..."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+            />
+          </div>
+
           {/* Save Button */}
           <Button
             className="w-full bg-dw-blush hover:bg-dw-blush/90 text-white rounded-xl"
             onClick={handleSave}
+            disabled={isSubmitting || (!flow && !activePeriod)}
           >
-            <Save className="h-4 w-4 mr-2" />
-            Save Entry
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                {activePeriod ? "End Period" : "Start Period"}
+              </>
+            )}
           </Button>
         </div>
       </Card>
