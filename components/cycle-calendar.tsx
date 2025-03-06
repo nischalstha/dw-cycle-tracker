@@ -368,23 +368,6 @@ export function CycleCalendar({ currentDate, cycleData }: CycleCalendarProps) {
     const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
     const info = getDayInfo(day);
 
-    if (mode === "log") {
-      const isInSelection =
-        periodStart && date.getTime() === periodStart.getTime();
-
-      return cn(
-        "relative w-full h-full rounded-lg flex flex-col items-center justify-center transition-all duration-200",
-        {
-          "ring-2 ring-dw-blush bg-white": isToday(day),
-          "bg-dw-period": isInSelection,
-          "hover:bg-dw-period/30 cursor-pointer":
-            !isInSelection && isSelectingPeriod,
-          "hover:bg-dw-gray/20 cursor-pointer":
-            !isInSelection && !isSelectingPeriod
-        }
-      );
-    }
-
     return cn(
       "relative w-full h-full rounded-lg flex flex-col items-center justify-center transition-all duration-200",
       {
@@ -398,7 +381,10 @@ export function CycleCalendar({ currentDate, cycleData }: CycleCalendarProps) {
         "bg-dw-fertile/40": info.isPrediction && info.isFertile,
         "bg-dw-luteal/40":
           info.isPrediction &&
-          (info.phase === "Luteal" || info.phase === "Follicular")
+          (info.phase === "Luteal" || info.phase === "Follicular"),
+        // Add styling for days without specific phase info
+        "bg-gradient-to-br from-gray-50 to-gray-100/30 border border-gray-100/50 shadow-sm":
+          !info.phase
       }
     );
   };
@@ -414,28 +400,6 @@ export function CycleCalendar({ currentDate, cycleData }: CycleCalendarProps) {
           })}
         </h2>
         <div className="flex items-center gap-2">
-          <div className="flex-shrink-0">
-            <ToggleGroup
-              type="single"
-              value={mode}
-              onValueChange={value => value && setMode(value as "view" | "log")}
-            >
-              <ToggleGroupItem
-                value="view"
-                aria-label="View mode"
-                className="h-9 w-9 p-0"
-              >
-                <Eye className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="log"
-                aria-label="Log mode"
-                className="h-9 w-9 p-0"
-              >
-                <Pencil className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
           <div className="flex gap-1">
             <Button
               variant="outline"
@@ -456,18 +420,6 @@ export function CycleCalendar({ currentDate, cycleData }: CycleCalendarProps) {
           </div>
         </div>
       </div>
-
-      {/* Mode-specific Instructions */}
-      {mode === "log" && (
-        <div className="bg-dw-cream/10 p-3 rounded-lg text-sm text-dw-text/70 flex items-center gap-2">
-          <Info className="h-4 w-4 text-dw-blush flex-shrink-0" />
-          <span>
-            {!isSelectingPeriod
-              ? "Click on a date to start logging a period"
-              : "Click on an end date to complete period logging"}
-          </span>
-        </div>
-      )}
 
       {/* Visual Cycle Timeline */}
       {mode === "view" && (
@@ -574,30 +526,29 @@ export function CycleCalendar({ currentDate, cycleData }: CycleCalendarProps) {
                     type="button"
                     onClick={() => handleDayClick(date)}
                     className={cn(
-                      "relative p-1 w-full aspect-square rounded-md transition-all duration-200 hover:bg-opacity-80 hover:shadow-sm hover:scale-105",
-                      {
-                        "bg-dw-cream/10 hover:bg-dw-cream/20":
-                          mode === "log" && !isSelectingPeriod,
-                        "bg-dw-period/10 hover:bg-dw-period/20":
-                          mode === "log" &&
-                          isSelectingPeriod &&
-                          periodStart &&
-                          date >= periodStart
-                      }
+                      "relative p-1 w-full aspect-square rounded-md transition-all duration-200 hover:bg-opacity-80 hover:shadow-sm hover:scale-105"
                     )}
                   >
                     <div className={dayClasses(day)}>
-                      {/* Calendar date number */}
+                      {/* Calendar date number with enhanced styling */}
                       <span
                         className={cn(
                           "text-sm font-medium",
-                          isToday(day) ? "text-dw-text" : "text-dw-text/80"
+                          isToday(day) ? "text-dw-text" : "text-dw-text/80",
+                          // Add a subtle highlight effect to the date number
+                          !info.phase &&
+                            "bg-white/70 px-1.5 py-0.5 rounded-full"
                         )}
                       >
                         {day}
                       </span>
 
-                      {/* Cycle day count - restored */}
+                      {/* Add a decorative dot for days without phase info */}
+                      {!info.phase && (
+                        <div className="w-1 h-1 rounded-full bg-gray-200 mt-1"></div>
+                      )}
+
+                      {/* Rest of the existing elements */}
                       {info.cycleDay && mode === "view" && (
                         <span className="text-xs text-dw-text/60 mt-0.5">
                           Day {info.cycleDay}
@@ -649,66 +600,50 @@ export function CycleCalendar({ currentDate, cycleData }: CycleCalendarProps) {
                   className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 max-w-[250px] z-50"
                   sideOffset={5}
                 >
-                  {mode === "log" ? (
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">
-                        {isSelectingPeriod
-                          ? "Select period end date"
-                          : "Click to log period"}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      {info.phase && (
+                        <>
+                          {info.isPeriod && (
+                            <Droplets className="h-4 w-4 text-dw-period" />
+                          )}
+                          {info.isOvulation && (
+                            <Sun className="h-4 w-4 text-dw-ovulation" />
+                          )}
+                          {info.isFertile && !info.isOvulation && (
+                            <Heart className="h-4 w-4 text-dw-fertile" />
+                          )}
+                          {!info.isPeriod && !info.isFertile && (
+                            <Moon className="h-4 w-4 text-dw-luteal" />
+                          )}
+                        </>
+                      )}
+                      {info.phase} Phase
+                      {info.isPrediction && " (Predicted)"}
+                    </div>
+                    {info.details.map((detail, i) => (
+                      <p key={i} className="text-xs text-dw-text/60">
+                        {detail}
                       </p>
-                      {periodStart &&
-                        date.getTime() === periodStart.getTime() && (
-                          <p className="text-xs text-dw-text/60">
-                            Period start date
-                          </p>
-                        )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium flex items-center gap-2">
-                        {info.phase && (
-                          <>
-                            {info.isPeriod && (
-                              <Droplets className="h-4 w-4 text-dw-period" />
-                            )}
-                            {info.isOvulation && (
-                              <Sun className="h-4 w-4 text-dw-ovulation" />
-                            )}
-                            {info.isFertile && !info.isOvulation && (
-                              <Heart className="h-4 w-4 text-dw-fertile" />
-                            )}
-                            {!info.isPeriod && !info.isFertile && (
-                              <Moon className="h-4 w-4 text-dw-luteal" />
-                            )}
-                          </>
-                        )}
-                        {info.phase} Phase
-                        {info.isPrediction && " (Predicted)"}
-                      </div>
-                      {info.details.map((detail, i) => (
-                        <p key={i} className="text-xs text-dw-text/60">
-                          {detail}
-                        </p>
-                      ))}
-                      {!info.details.length && info.phase && (
-                        <p className="text-xs text-dw-text/60">
-                          {info.phase === "Follicular" &&
-                            "Your body is preparing for ovulation"}
-                          {info.phase === "Luteal" && "Post-ovulation phase"}
-                          {info.isPeriod && "Menstruation phase"}
-                          {info.isOvulation && "Peak fertility day"}
-                          {info.isFertile &&
-                            !info.isOvulation &&
-                            "High chance of conception"}
-                        </p>
-                      )}
-                      {info.daysUntil !== null && info.daysUntil > 0 && (
-                        <p className="text-xs font-medium text-dw-blush">
-                          In {info.daysUntil} days
-                        </p>
-                      )}
-                    </div>
-                  )}
+                    ))}
+                    {!info.details.length && info.phase && (
+                      <p className="text-xs text-dw-text/60">
+                        {info.phase === "Follicular" &&
+                          "Your body is preparing for ovulation"}
+                        {info.phase === "Luteal" && "Post-ovulation phase"}
+                        {info.isPeriod && "Menstruation phase"}
+                        {info.isOvulation && "Peak fertility day"}
+                        {info.isFertile &&
+                          !info.isOvulation &&
+                          "High chance of conception"}
+                      </p>
+                    )}
+                    {info.daysUntil !== null && info.daysUntil > 0 && (
+                      <p className="text-xs font-medium text-dw-blush">
+                        In {info.daysUntil} days
+                      </p>
+                    )}
+                  </div>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
